@@ -95,7 +95,7 @@ func logTimestamp() -> String {
 
 // generate log prefix based on level
 func logPrefix(_ level: String) -> String {
-  return "\(logTimestamp()) [aw-watcher-window-macos] [\(level)]"
+  return "\(logTimestamp()) [aw-watcher-virtualdesktop-macos] [\(level)]"
 }
 
 let logLevel = ProcessInfo.processInfo.environment["LOG_LEVEL"]?.uppercased() ?? "INFO"
@@ -121,7 +121,7 @@ func error(_ msg: String) {
 var baseurl = "http://localhost:5600"
 // NOTE: this differs from the hostname we get from Python, here we get `.local`, but in Python we get `.localdomain`
 var clientHostname = ProcessInfo.processInfo.hostName
-var clientName = "aw-watcher-window"
+var clientName = "aw-watcher-virtualdesktop"
 var bucketName = "\(clientName)_\(clientHostname)"
 
 let main = MainThing()
@@ -150,7 +150,7 @@ func start() {
 
   // Check that we get 4 arguments
   if arguments.count != 5 {
-    print("Usage: aw-watcher-window <url> <bucket> <hostname> <client>")
+    print("Usage: aw-watcher-virtualdesktop <url> <bucket> <hostname> <client>")
     exit(1)
   }
 
