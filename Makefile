@@ -7,21 +7,21 @@ build:
 		make build-swift; \
 	fi
 
-build-swift: aw_watcher_window/aw-watcher-window-macos
+build-swift: aw_watcher_virtualdesktop/aw-watcher-virtualdesktop-macos
 
-aw_watcher_window/aw-watcher-window-macos: aw_watcher_window/macos.swift
+aw_watcher_virtualdesktop/aw-watcher-virtualdesktop-macos: aw_watcher_virtualdesktop/macos.swift
 	swiftc $^ -o $@
 
 test:
-	aw-watcher-window --help
+        aw-watcher-virtualdesktop --help
 
 typecheck:
-	poetry run mypy aw_watcher_window/ --ignore-missing-imports
+        poetry run mypy aw_watcher_virtualdesktop/ --ignore-missing-imports
 
 package:
-	pyinstaller aw-watcher-window.spec --clean --noconfirm
+        pyinstaller aw-watcher-window.spec --clean --noconfirm
 
 clean:
 	rm -rf build dist
-	rm -rf aw_watcher_window/__pycache__
-	rm aw_watcher_window/aw-watcher-window-macos
+        rm -rf aw_watcher_virtualdesktop/__pycache__
+        rm aw_watcher_virtualdesktop/aw-watcher-virtualdesktop-macos

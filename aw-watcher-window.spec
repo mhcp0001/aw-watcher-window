@@ -3,11 +3,11 @@ import platform
 block_cipher = None
 
 a = Analysis(
-    ["aw_watcher_window/__main__.py"],
+    ["aw_watcher_virtualdesktop/__main__.py"],
     pathex=[],
-    binaries=[("aw_watcher_window/aw-watcher-window-macos", "aw_watcher_window")] if platform.system() == "Darwin" else [],
+    binaries=[("aw_watcher_virtualdesktop/aw-watcher-virtualdesktop-macos", "aw_watcher_virtualdesktop")] if platform.system() == "Darwin" else [],
     datas=[
-        ("aw_watcher_window/printAppStatus.jxa", "aw_watcher_window"),
+        ("aw_watcher_virtualdesktop/printAppStatus.jxa", "aw_watcher_virtualdesktop"),
     ],
     hiddenimports=[],
     hookspath=[],
@@ -22,7 +22,7 @@ exe = EXE(
     pyz,
     a.scripts,
     exclude_binaries=True,
-    name="aw-watcher-window",
+    name="aw-watcher-virtualdesktop",
     contents_directory=".",
     debug=False,
     strip=False,
@@ -36,5 +36,5 @@ coll = COLLECT(
     a.datas,
     strip=False,
     upx=True,
-    name="aw-watcher-window",
+    name="aw-watcher-virtualdesktop",
 )

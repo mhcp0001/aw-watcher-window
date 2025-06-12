@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches: [ feature/virtualdesktop ]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: Gr1N/setup-poetry@v8
+      - name: Install dependencies
+        run: poetry install
+      - name: Run tests
+        run: poetry run pytest -vv
+      - name: Oneshoot check
+        run: poetry run aw-watcher-virtualdesktop --oneshot
