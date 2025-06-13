@@ -1,4 +1,5 @@
 import logging
+import json
 import os
 import re
 import signal
@@ -14,6 +15,7 @@ from aw_core.models import Event
 from .config import parse_args
 from .exceptions import FatalError
 from .lib import get_current_window
+from .platform import get_virtual_desktop
 from .macos_permissions import background_ensure_permissions
 
 logger = logging.getLogger(__name__)
@@ -48,8 +50,15 @@ def main():
     ):
         raise Exception("DISPLAY environment variable not set")
 
+    if args.oneshot:
+        data = get_current_window(args.strategy)
+        if data is not None and "virtual_desktop" not in data:
+            data["virtual_desktop"] = get_virtual_desktop()
+        print(json.dumps(data))
+        return
+
     setup_logging(
-        name="aw-watcher-window",
+        name="aw-watcher-virtualdesktop",
         testing=args.testing,
         verbose=args.verbose,
         log_stderr=True,
@@ -60,7 +69,7 @@ def main():
         background_ensure_permissions()
 
     client = ActivityWatchClient(
-        "aw-watcher-window", host=args.host, port=args.port, testing=args.testing
+        "aw-watcher-virtualdesktop", host=args.host, port=args.port, testing=args.testing
     )
 
     bucket_id = f"{client.client_name}_{client.client_hostname}"
@@ -68,14 +77,14 @@ def main():
 
     client.create_bucket(bucket_id, event_type, queued=True)
 
-    logger.info("aw-watcher-window started")
+    logger.info("aw-watcher-virtualdesktop started")
     client.wait_for_start()
 
     with client:
         if sys.platform == "darwin" and args.strategy == "swift":
             logger.info("Using swift strategy, calling out to swift binary")
             binpath = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)), "aw-watcher-window-macos"
+                os.path.dirname(os.path.realpath(__file__)), "aw-watcher-virtualdesktop-macos"
             )
 
             try:
@@ -150,6 +159,9 @@ def heartbeat_loop(
 
             if exclude_title:
                 current_window["title"] = "excluded"
+
+            if "virtual_desktop" not in current_window:
+                current_window["virtual_desktop"] = get_virtual_desktop()
 
             now = datetime.now(timezone.utc)
             current_window_event = Event(timestamp=now, data=current_window)
