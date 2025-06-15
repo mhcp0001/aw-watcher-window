@@ -5,6 +5,6 @@ build
 dist
 *.swp
 .mypy_cache
-aw-watcher-window-macos
+aw-watcher-virtualdesktop-macos
 
 .python-version
