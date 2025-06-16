@@ -10,6 +10,8 @@ aw-watcher-virtualdesktop = "aw_watcher_virtualdesktop:main"
 
 [tool.poetry.dependencies]
 python = "^3.8"
+pytest = "^8.2"
+pytest-cov = "^5.0"
 aw-client = "^0.5.14"
 pywin32 = {version = "306", platform = "win32"}
 wmi = {version = "*", platform = "win32"}
