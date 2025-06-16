@@ -6,32 +6,49 @@ from typing import Optional
 
 if sys.platform.startswith("win"):
     import ctypes
-    import comtypes
-    from ctypes import wintypes
-    from comtypes import GUID, COMMETHOD, HRESULT
+    try:
+        import comtypes
+        from ctypes import wintypes
+        from comtypes import GUID, COMMETHOD, HRESULT
 
-    class IVirtualDesktopManager(comtypes.IUnknown):
-        _iid_ = GUID("{A5CD92FF-29BE-454C-8D04-D82879FB3F1B}")
-        _methods_ = [
-            COMMETHOD([], HRESULT, "IsWindowOnCurrentVirtualDesktop",
-                      (["in"], wintypes.HWND, "hwnd"),
-                      (["out"], ctypes.POINTER(ctypes.c_bool), "onCurrentDesktop")),
-            COMMETHOD([], HRESULT, "GetWindowDesktopId",
-                      (["in"], wintypes.HWND, "hwnd"),
-                      (["out"], ctypes.POINTER(GUID), "desktopId")),
-            COMMETHOD([], HRESULT, "MoveWindowToDesktop",
-                      (["in"], wintypes.HWND, "hwnd"),
-                      (["in"], ctypes.POINTER(GUID), "desktopId")),
-        ]
+        try:
+            class IVirtualDesktopManager(comtypes.IUnknown):
+                _iid_ = GUID("{A5CD92FF-29BE-454C-8D04-D82879FB3F1B}")
+                _methods_ = [
+                    COMMETHOD([], HRESULT, "IsWindowOnCurrentVirtualDesktop",
+                              (["in"], wintypes.HWND, "hwnd"),
+                              (["out"], ctypes.POINTER(ctypes.c_bool), "onCurrentDesktop")),
+                    COMMETHOD([], HRESULT, "GetWindowDesktopId",
+                              (["in"], wintypes.HWND, "hwnd"),
+                              (["out"], ctypes.POINTER(GUID), "desktopId")),
+                    COMMETHOD([], HRESULT, "MoveWindowToDesktop",
+                              (["in"], wintypes.HWND, "hwnd"),
+                              (["in"], ctypes.POINTER(GUID), "desktopId")),
+                ]
 
-    CLSID_VirtualDesktopManager = GUID("{AA509086-5CA9-4C25-8F95-589D3C07B48A}")
+            CLSID_VirtualDesktopManager = GUID("{AA509086-5CA9-4C25-8F95-589D3C07B48A}")
+        except Exception:
+            # comtypes might be a stub without ctypes integration (as in tests)
+            class IVirtualDesktopManager:  # type: ignore
+                pass
+
+            CLSID_VirtualDesktopManager = GUID("{AA509086-5CA9-4C25-8F95-589D3C07B48A}")
+    except Exception:  # pragma: no cover - used on non-windows platforms
+        comtypes = None  # type: ignore
+        IVirtualDesktopManager = object  # type: ignore
+        CLSID_VirtualDesktopManager = None
+
 
     def get_virtual_desktop() -> Optional[str]:
         from .windows import get_active_window_handle
+        if comtypes is None:
+            return None
 
         comtypes.CoInitialize()
-        manager = comtypes.CoCreateInstance(CLSID_VirtualDesktopManager, interface=IVirtualDesktopManager)
-        desktop_id = GUID()
+        manager = comtypes.CoCreateInstance(
+            CLSID_VirtualDesktopManager, interface=IVirtualDesktopManager
+        )
+        desktop_id = comtypes.GUID()
         hwnd = get_active_window_handle()
         res = manager.GetWindowDesktopId(hwnd, ctypes.byref(desktop_id))
         if res != 0:
