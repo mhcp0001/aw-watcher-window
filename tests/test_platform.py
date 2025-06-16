@@ -16,7 +16,8 @@ def reload_for_platform(monkeypatch, plat, mods=None):
 
 @pytest.mark.skipif(getattr(ctypes, 'WINFUNCTYPE', None) is None, reason='non-windows')
 def test_get_virtual_desktop_windows(monkeypatch):
-    class FakeGUID:
+    class FakeGUID(ctypes.Structure):
+        _fields_ = []
         def __init__(self, *args, **kwargs):
             self.value = ''
 
