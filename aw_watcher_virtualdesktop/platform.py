@@ -11,14 +11,14 @@ if sys.platform.startswith("win"):
     from comtypes import GUID
 
     class IVirtualDesktopManager(comtypes.IUnknown):
-        _iid_ = GUID("A5CD92FF-29BE-454C-8D04-D82879FB3F1B")
+        _iid_ = GUID("{A5CD92FF-29BE-454C-8D04-D82879FB3F1B}")
         _methods_ = [
             ("IsWindowOnCurrentVirtualDesktop", ctypes.WINFUNCTYPE(ctypes.HRESULT, wintypes.HWND, ctypes.POINTER(ctypes.c_bool))),
             ("GetWindowDesktopId", ctypes.WINFUNCTYPE(ctypes.HRESULT, wintypes.HWND, ctypes.POINTER(GUID))),
             ("MoveWindowToDesktop", ctypes.WINFUNCTYPE(ctypes.HRESULT, wintypes.HWND, ctypes.POINTER(GUID))),
         ]
 
-    CLSID_VirtualDesktopManager = GUID("AA509086-5CA9-4C25-8F95-589D3C07B48A")
+    CLSID_VirtualDesktopManager = GUID("{AA509086-5CA9-4C25-8F95-589D3C07B48A}")
 
     def get_virtual_desktop() -> Optional[str]:
         from .windows import get_active_window_handle
