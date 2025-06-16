@@ -8,14 +8,20 @@ if sys.platform.startswith("win"):
     import ctypes
     import comtypes
     from ctypes import wintypes
-    from comtypes import GUID
+    from comtypes import GUID, COMMETHOD, HRESULT
 
     class IVirtualDesktopManager(comtypes.IUnknown):
         _iid_ = GUID("{A5CD92FF-29BE-454C-8D04-D82879FB3F1B}")
         _methods_ = [
-            ("IsWindowOnCurrentVirtualDesktop", ctypes.WINFUNCTYPE(ctypes.HRESULT, wintypes.HWND, ctypes.POINTER(ctypes.c_bool))),
-            ("GetWindowDesktopId", ctypes.WINFUNCTYPE(ctypes.HRESULT, wintypes.HWND, ctypes.POINTER(GUID))),
-            ("MoveWindowToDesktop", ctypes.WINFUNCTYPE(ctypes.HRESULT, wintypes.HWND, ctypes.POINTER(GUID))),
+            COMMETHOD([], HRESULT, "IsWindowOnCurrentVirtualDesktop",
+                      (["in"], wintypes.HWND, "hwnd"),
+                      (["out"], ctypes.POINTER(ctypes.c_bool), "onCurrentDesktop")),
+            COMMETHOD([], HRESULT, "GetWindowDesktopId",
+                      (["in"], wintypes.HWND, "hwnd"),
+                      (["out"], ctypes.POINTER(GUID), "desktopId")),
+            COMMETHOD([], HRESULT, "MoveWindowToDesktop",
+                      (["in"], wintypes.HWND, "hwnd"),
+                      (["in"], ctypes.POINTER(GUID), "desktopId")),
         ]
 
     CLSID_VirtualDesktopManager = GUID("{AA509086-5CA9-4C25-8F95-589D3C07B48A}")

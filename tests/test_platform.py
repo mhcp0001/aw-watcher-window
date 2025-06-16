@@ -30,6 +30,8 @@ def test_get_virtual_desktop_windows(monkeypatch):
     fake_mod.CoInitialize = lambda: None
     fake_mod.CoCreateInstance = lambda clsid, interface=None: FakeMgr()
     fake_mod.IUnknown = object
+    fake_mod.COMMETHOD = lambda *a, **k: None  # ImportError回避
+    fake_mod.HRESULT = int  # ImportError回避
     reload_for_platform(monkeypatch, 'win32', {'comtypes': fake_mod})
     class Dummy:
         def GetWindowDesktopId(self, hwnd, guid_ptr):
