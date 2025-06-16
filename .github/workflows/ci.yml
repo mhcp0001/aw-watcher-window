@@ -14,6 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: Gr1N/setup-poetry@v8
+      - name: lock poetry
+        run: poetry lock --no-update
       - name: Install dependencies
         run: poetry install
       - name: Run tests
