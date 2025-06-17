@@ -2,8 +2,6 @@ import logging
 import json
 import os
 import re
-import signal
-import subprocess
 import sys
 from datetime import datetime, timezone
 from time import sleep
@@ -16,7 +14,6 @@ from .config import parse_args
 from .exceptions import FatalError
 from .lib import get_current_window
 from .platform import get_virtual_desktop
-from .macos_permissions import background_ensure_permissions
 
 logger = logging.getLogger(__name__)
 
@@ -24,16 +21,6 @@ logger = logging.getLogger(__name__)
 log_level = os.environ.get("LOG_LEVEL")
 if log_level:
     logger.setLevel(logging.__getattribute__(log_level.upper()))
-
-
-def kill_process(pid):
-    logger.info("Killing process {}".format(pid))
-    try:
-        os.kill(pid, signal.SIGTERM)
-    except ProcessLookupError:
-        logger.info("Process {} already dead".format(pid))
-
-
 def try_compile_title_regex(title):
     try:
         return re.compile(title, re.IGNORECASE)
@@ -65,8 +52,7 @@ def main():
         log_file=True,
     )
 
-    if sys.platform == "darwin":
-        background_ensure_permissions()
+
 
     client = ActivityWatchClient(
         "aw-watcher-virtualdesktop", host=args.host, port=args.port, testing=args.testing
@@ -81,41 +67,18 @@ def main():
     client.wait_for_start()
 
     with client:
-        if sys.platform == "darwin" and args.strategy == "swift":
-            logger.info("Using swift strategy, calling out to swift binary")
-            binpath = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)), "aw-watcher-virtualdesktop-macos"
-            )
-
-            try:
-                p = subprocess.Popen(
-                    [
-                        binpath,
-                        client.server_address,
-                        bucket_id,
-                        client.client_hostname,
-                        client.client_name,
-                    ]
-                )
-                # terminate swift process when this process dies
-                signal.signal(signal.SIGTERM, lambda *_: kill_process(p.pid))
-                p.wait()
-            except KeyboardInterrupt:
-                print("KeyboardInterrupt")
-                kill_process(p.pid)
-        else:
-            heartbeat_loop(
-                client,
-                bucket_id,
-                poll_time=args.poll_time,
-                strategy=args.strategy,
-                exclude_title=args.exclude_title,
-                exclude_titles=[
-                    try_compile_title_regex(title)
-                    for title in args.exclude_titles
-                    if title is not None
-                ],
-            )
+        heartbeat_loop(
+            client,
+            bucket_id,
+            poll_time=args.poll_time,
+            strategy=args.strategy,
+            exclude_title=args.exclude_title,
+            exclude_titles=[
+                try_compile_title_regex(title)
+                for title in args.exclude_titles
+                if title is not None
+            ],
+        )
 
 
 def heartbeat_loop(

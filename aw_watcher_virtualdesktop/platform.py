@@ -65,16 +65,9 @@ if sys.platform.startswith("win"):
         return str(desktop_id)
 
 elif sys.platform == "darwin":
-    import ctypes
-
-    CGSGetActiveSpace = ctypes.cdll.LoadLibrary("/System/Library/Frameworks/CoreGraphics.framework/CoreGraphics").CGSGetActiveSpace
-    CGSGetActiveSpace.argtypes = [ctypes.c_uint32, ctypes.POINTER(ctypes.c_uint64)]
-
     def get_virtual_desktop() -> Optional[int]:
-        space = ctypes.c_uint64()
-        # 0 for default connection
-        CGSGetActiveSpace(0, ctypes.byref(space))
-        return int(space.value)
+        # macOS support removed
+        return None
 
 else:
     def _get_current_desktop_x11() -> Optional[int]:
