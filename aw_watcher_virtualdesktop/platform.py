@@ -40,7 +40,7 @@ if sys.platform.startswith("win"):
 
 
     def get_virtual_desktop() -> Optional[str]:
-        """Return the GUID of the current virtual desktop on Windows."""
+        """Return the identifier of the current virtual desktop on Windows."""
         from .windows import get_active_window_handle
 
         if comtypes is None:
@@ -71,6 +71,7 @@ elif sys.platform == "darwin":
     CGSGetActiveSpace.argtypes = [ctypes.c_uint32, ctypes.POINTER(ctypes.c_uint64)]
 
     def get_virtual_desktop() -> Optional[int]:
+        """Return the index of the current space on macOS."""
         space = ctypes.c_uint64()
         # 0 for default connection
         CGSGetActiveSpace(0, ctypes.byref(space))
@@ -122,6 +123,7 @@ else:
             return None
 
     def get_virtual_desktop() -> Optional[int]:
+        """Return the current workspace index on Linux desktops."""
         if os.environ.get("XDG_SESSION_TYPE") == "x11":
             return _get_current_desktop_x11()
         session = os.environ.get("XDG_CURRENT_DESKTOP", "").lower()
