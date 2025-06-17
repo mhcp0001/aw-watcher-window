@@ -59,6 +59,48 @@ def test_get_virtual_desktop_windows(monkeypatch):
 
 
 @pytest.mark.skipif(getattr(ctypes, 'WINFUNCTYPE', None) is None, reason='non-windows')
+def test_print_virtual_desktop_info(monkeypatch, capsys):
+    class FakeGUID(ctypes.Structure):
+        _fields_ = [("value", ctypes.c_char_p)]
+
+        def __init__(self, *args, **kwargs):
+            super().__init__()
+            self.value = b'abc'
+
+        def __str__(self):
+            return 'abc'
+
+    class FakeMgr:
+        def GetWindowDesktopId(self, hwnd, guid_ptr):
+            guid = ctypes.cast(guid_ptr, ctypes.POINTER(FakeGUID)).contents
+            guid.value = b'abc'
+            return 0
+
+    fake_mod = type('FakeComtypes', (), {
+        'GUID': FakeGUID,
+        'CoInitialize': lambda: None,
+        'CoCreateInstance': lambda clsid, interface=None: FakeMgr(),
+        'IUnknown': object,
+        'COMMETHOD': lambda *a, **k: None,
+        'HRESULT': int
+    })
+
+    reload_for_platform(monkeypatch, 'win32', {'comtypes': fake_mod})
+    monkeypatch.setattr(platform_mod, 'IVirtualDesktopManager', FakeMgr, raising=False)
+    monkeypatch.setattr(platform_mod, 'CLSID_VirtualDesktopManager', FakeGUID, raising=False)
+    monkeypatch.setitem(sys.modules, 'aw_watcher_virtualdesktop.windows',
+                       type('M', (), {'get_active_window_handle': lambda: 1}))
+    monkeypatch.setattr(platform_mod, '_lookup_desktop_name', lambda g: 'DeskName', raising=False)
+
+    name = platform_mod.get_virtual_desktop()
+    guid = platform_mod._get_virtual_desktop_guid()
+    print(f"name={name}, guid={guid}")
+    out, _ = capsys.readouterr()
+    assert 'DeskName' in out
+    assert 'abc' in out
+
+
+@pytest.mark.skipif(getattr(ctypes, 'WINFUNCTYPE', None) is None, reason='non-windows')
 def test_get_virtual_desktop_windows_bad_comtypes(monkeypatch):
     class FakeGUID(ctypes.Structure):
         _fields_ = [("value", ctypes.c_char_p)]
