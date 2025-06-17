@@ -1,3 +1,4 @@
+
 name: Run tests
 
 on:
@@ -8,7 +9,6 @@ on:
 jobs:
   test:
     runs-on: windows-latest
-
     steps:
       - uses: actions/checkout@v3
       - name: Setup Python
@@ -20,6 +20,8 @@ jobs:
       - name: Install dependencies
         run: |
           poetry config virtualenvs.create true
+          poetry lock
           poetry install --no-interaction --no-ansi
       - name: Run pytest
         run: poetry run pytest -vv
+
