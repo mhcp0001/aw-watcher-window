@@ -24,6 +24,6 @@ that it might not get the exact version of the dependencies due to not reading t
 
 In order for this watcher to be available in the UI, you'll need to have a Away From Computer (afk) watcher running alongside it.
 
-Every heartbeat now includes a `virtual_desktop` field indicating the current workspace index (or GUID on Windows). This information is best-effort and may not be available on all desktop environments.
+Every heartbeat now includes a `virtual_desktop` field indicating the current workspace index (or desktop name on Windows). This information is best-effort and may not be available on all desktop environments.
 
 

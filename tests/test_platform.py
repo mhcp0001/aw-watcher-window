@@ -53,9 +53,9 @@ def test_get_virtual_desktop_windows(monkeypatch):
                        type('M', (), {'get_active_window_handle': lambda: 1}))
     
     # テスト実行
+    monkeypatch.setattr(platform_mod, '_lookup_desktop_name', lambda g: 'DeskName', raising=False)
     result = platform_mod.get_virtual_desktop()
-    assert result is not None
-    assert result == 'abc'
+    assert result == 'DeskName'
 
 
 @pytest.mark.skipif(getattr(ctypes, 'WINFUNCTYPE', None) is None, reason='non-windows')

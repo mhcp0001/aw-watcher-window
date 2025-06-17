@@ -6,6 +6,7 @@ from typing import Optional
 
 if sys.platform.startswith("win"):
     import ctypes
+    import winreg
     try:
         import comtypes
         from ctypes import wintypes
@@ -38,8 +39,7 @@ if sys.platform.startswith("win"):
         IVirtualDesktopManager = object  # type: ignore
         CLSID_VirtualDesktopManager = None
 
-
-    def get_virtual_desktop() -> Optional[str]:
+    def _get_virtual_desktop_guid() -> Optional[str]:
         """Return the GUID of the current virtual desktop on Windows."""
         from .windows import get_active_window_handle
 
@@ -63,6 +63,23 @@ if sys.platform.startswith("win"):
         if res != 0:
             return None
         return str(desktop_id)
+
+    def _lookup_desktop_name(desktop_guid: str) -> Optional[str]:
+        """Look up the configured name for a virtual desktop GUID."""
+        path = rf"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VirtualDesktops\Desktops\{desktop_guid.upper()}"
+        try:
+            with winreg.OpenKey(winreg.HKEY_CURRENT_USER, path) as key:
+                name, _ = winreg.QueryValueEx(key, "Name")
+                return name
+        except Exception:
+            return None
+
+    def get_virtual_desktop() -> Optional[str]:
+        guid = _get_virtual_desktop_guid()
+        if guid is None:
+            return None
+        name = _lookup_desktop_name(guid)
+        return name or guid
 
 elif sys.platform == "darwin":
     def get_virtual_desktop() -> Optional[int]:
