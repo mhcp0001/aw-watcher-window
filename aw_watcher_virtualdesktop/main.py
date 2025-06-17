@@ -41,6 +41,14 @@ def main():
         data = get_current_window(args.strategy)
         if data is not None and "virtual_desktop" not in data:
             data["virtual_desktop"] = get_virtual_desktop()
+
+        for pattern in [try_compile_title_regex(t) for t in args.exclude_titles]:
+            if data and "title" in data and pattern.search(data["title"]):
+                data.pop("title", None)
+
+        if args.exclude_title and data is not None:
+            data.pop("title", None)
+
         print(json.dumps(data))
         return
 
@@ -117,11 +125,12 @@ def heartbeat_loop(
             logger.debug("Unable to fetch window, trying again on next poll")
         else:
             for pattern in exclude_titles:
-                if pattern.search(current_window["title"]):
-                    current_window["title"] = "excluded"
+                if "title" in current_window and pattern.search(current_window["title"]):
+                    current_window.pop("title", None)
+                    break
 
-            if exclude_title:
-                current_window["title"] = "excluded"
+            if exclude_title and "title" in current_window:
+                current_window.pop("title", None)
 
             if "virtual_desktop" not in current_window:
                 current_window["virtual_desktop"] = get_virtual_desktop()

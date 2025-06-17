@@ -26,4 +26,6 @@ In order for this watcher to be available in the UI, you'll need to have a Away 
 
 Every heartbeat now includes a `virtual_desktop` field indicating the current workspace index (or desktop name on Windows). This information is best-effort and may not be available on all desktop environments.
 
+Window titles can contain sensitive data. Use the `--exclude-title` option or set `exclude_title = true` in the configuration to omit the `title` field entirely from the sent events.
+
 
