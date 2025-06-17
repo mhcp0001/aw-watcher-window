@@ -58,6 +58,33 @@ def test_get_virtual_desktop_windows(monkeypatch):
     assert result == 'abc'
 
 
+@pytest.mark.skipif(getattr(ctypes, 'WINFUNCTYPE', None) is None, reason='non-windows')
+def test_get_virtual_desktop_windows_bad_comtypes(monkeypatch):
+    class FakeGUID(ctypes.Structure):
+        _fields_ = [("value", ctypes.c_char_p)]
+
+    class FakeMgr:
+        def GetWindowDesktopId(self, hwnd):
+            return 0
+
+    fake_mod = type('FakeComtypes', (), {
+        'GUID': FakeGUID,
+        'CoInitialize': lambda: None,
+        'CoCreateInstance': lambda clsid, interface=None: FakeMgr(),
+        'IUnknown': object,
+        'COMMETHOD': lambda *a, **k: None,
+        'HRESULT': int
+    })
+
+    reload_for_platform(monkeypatch, 'win32', {'comtypes': fake_mod})
+    monkeypatch.setattr(platform_mod, 'IVirtualDesktopManager', FakeMgr, raising=False)
+    monkeypatch.setattr(platform_mod, 'CLSID_VirtualDesktopManager', FakeGUID, raising=False)
+    monkeypatch.setitem(sys.modules, 'aw_watcher_virtualdesktop.windows',
+                       type('M', (), {'get_active_window_handle': lambda: 1}))
+
+    assert platform_mod.get_virtual_desktop() is None
+
+
 def test_get_virtual_desktop_x11(monkeypatch):
     reload_for_platform(monkeypatch, 'linux')
     monkeypatch.setenv('XDG_SESSION_TYPE', 'x11')
