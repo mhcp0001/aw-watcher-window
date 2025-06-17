@@ -40,17 +40,26 @@ if sys.platform.startswith("win"):
 
 
     def get_virtual_desktop() -> Optional[str]:
+        """Return the GUID of the current virtual desktop on Windows."""
         from .windows import get_active_window_handle
+
         if comtypes is None:
             return None
 
-        comtypes.CoInitialize()
-        manager = comtypes.CoCreateInstance(
-            CLSID_VirtualDesktopManager, interface=IVirtualDesktopManager
-        )
+        try:
+            comtypes.CoInitialize()
+            manager = comtypes.CoCreateInstance(
+                CLSID_VirtualDesktopManager, interface=IVirtualDesktopManager
+            )
+        except Exception:
+            return None
+
         desktop_id = comtypes.GUID()
         hwnd = get_active_window_handle()
-        res = manager.GetWindowDesktopId(hwnd, ctypes.byref(desktop_id))
+        try:
+            res = manager.GetWindowDesktopId(hwnd, ctypes.byref(desktop_id))
+        except Exception:
+            return None
         if res != 0:
             return None
         return str(desktop_id)
