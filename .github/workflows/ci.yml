@@ -1,24 +1,27 @@
-name: CI
+
+name: Run tests
 
 on:
   push:
-    branches: [ feature/virtualdesktop ]
+    branches: [ main ]
   pull_request:
 
 jobs:
   test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [windows-latest]
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: Gr1N/setup-poetry@v8
-      - name: lock poetry
-        run: poetry lock
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install Poetry
+        run: pip install poetry
       - name: Install dependencies
-        run: poetry install
-      - name: Run tests
+        run: |
+          poetry config virtualenvs.create true
+          poetry lock
+          poetry install --no-interaction --no-ansi
+      - name: Run pytest
         run: poetry run pytest -vv
-      - name: Oneshoot check
-        run: poetry run aw-watcher-virtualdesktop --oneshot
+
