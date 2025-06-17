@@ -34,6 +34,7 @@ if sys.platform.startswith("win"):
 
     def _get_virtual_desktop_guid() -> Optional[str]:
         """Return the GUID of the current virtual desktop on Windows. 必ず取得できなければ詳細なエラーを出す"""
+
         from .windows import get_active_window_handle
 
         if comtypes is None:
@@ -122,6 +123,7 @@ elif sys.platform == "darwin":
         # macOS support removed
         return None
 
+
 else:
     def _get_current_desktop_x11() -> Optional[int]:
         try:
@@ -168,6 +170,7 @@ else:
             return None
 
     def get_virtual_desktop() -> Optional[int]:
+        """Return the current workspace index on Linux desktops."""
         if os.environ.get("XDG_SESSION_TYPE") == "x11":
             return _get_current_desktop_x11()
         session = os.environ.get("XDG_CURRENT_DESKTOP", "").lower()

@@ -26,7 +26,6 @@ def get_current_window_linux() -> Optional[dict]:
 def get_current_window_macos(strategy: str) -> Optional[dict]:
     raise FatalError("macOS support has been disabled in this build")
 
-
 def get_current_window_windows() -> Optional[dict]:
     from . import windows
 
@@ -54,8 +53,10 @@ def get_current_window(strategy: Optional[str] = None) -> Optional[dict]:
 
     if sys.platform.startswith("linux"):
         return get_current_window_linux()
+
     elif sys.platform == "darwin":
         raise FatalError("macOS support disabled")
+
     elif sys.platform in ["win32", "cygwin"]:
         return get_current_window_windows()
     else:

@@ -5,10 +5,8 @@ block_cipher = None
 a = Analysis(
     ["aw_watcher_virtualdesktop/__main__.py"],
     pathex=[],
-    binaries=[("aw_watcher_virtualdesktop/aw-watcher-virtualdesktop-macos", "aw_watcher_virtualdesktop")] if platform.system() == "Darwin" else [],
-    datas=[
-        ("aw_watcher_virtualdesktop/printAppStatus.jxa", "aw_watcher_virtualdesktop"),
-    ],
+    binaries=[],
+    datas=[],
     hiddenimports=[],
     hookspath=[],
     runtime_hooks=[],

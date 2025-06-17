@@ -38,7 +38,7 @@ def main():
         raise Exception("DISPLAY environment variable not set")
 
     if args.oneshot:
-        data = get_current_window(args.strategy)
+        data = get_current_window()
         if data is not None and "virtual_desktop" not in data:
             data["virtual_desktop"] = get_virtual_desktop()
 
@@ -60,8 +60,6 @@ def main():
         log_file=True,
     )
 
-
-
     client = ActivityWatchClient(
         "aw-watcher-virtualdesktop", host=args.host, port=args.port, testing=args.testing
     )
@@ -80,6 +78,7 @@ def main():
             bucket_id,
             poll_time=args.poll_time,
             strategy=args.strategy,
+
             exclude_title=args.exclude_title,
             exclude_titles=[
                 try_compile_title_regex(title)
@@ -90,7 +89,7 @@ def main():
 
 
 def heartbeat_loop(
-    client, bucket_id, poll_time, strategy, exclude_title=False, exclude_titles=[]
+    client, bucket_id, poll_time, exclude_title=False, exclude_titles=[]
 ):
     while True:
         if os.getppid() == 1:
@@ -99,7 +98,7 @@ def heartbeat_loop(
 
         current_window = None
         try:
-            current_window = get_current_window(strategy)
+            current_window = get_current_window()
             logger.debug(current_window)
         except (FatalError, OSError):
             # Fatal exceptions should quit the program
