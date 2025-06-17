@@ -94,10 +94,11 @@ def test_print_virtual_desktop_info(monkeypatch, capsys):
 
     name = platform_mod.get_virtual_desktop()
     guid = platform_mod._get_virtual_desktop_guid()
-    print(f"name={name}, guid={guid}")
+    print(f"Desktop Name: {name}")
+    print(f"GUID: {guid}")
     out, _ = capsys.readouterr()
-    assert 'DeskName' in out
-    assert 'abc' in out
+    assert 'Desktop Name: DeskName' in out
+    assert 'GUID: abc' in out
 
 
 @pytest.mark.skipif(getattr(ctypes, 'WINFUNCTYPE', None) is None, reason='non-windows')
