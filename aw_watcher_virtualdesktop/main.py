@@ -16,7 +16,6 @@ from .config import parse_args
 from .exceptions import FatalError
 from .lib import get_current_window
 from .platform import get_virtual_desktop
-from .macos_permissions import background_ensure_permissions
 
 logger = logging.getLogger(__name__)
 
@@ -65,8 +64,6 @@ def main():
         log_file=True,
     )
 
-    if sys.platform == "darwin":
-        background_ensure_permissions()
 
     client = ActivityWatchClient(
         "aw-watcher-virtualdesktop", host=args.host, port=args.port, testing=args.testing
