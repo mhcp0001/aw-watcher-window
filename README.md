@@ -1,7 +1,7 @@
 aw-watcher-virtualdesktop
 =======================
 
-Cross-platform window watcher with virtual desktop tracking for Linux (X11/Wayland), macOS, and Windows.
+Window watcher with virtual desktop tracking for Windows.
 
 [![Build Status](https://travis-ci.org/ActivityWatch/aw-watcher-window.svg?branch=master)](https://travis-ci.org/ActivityWatch/aw-watcher-window)
 
@@ -24,10 +24,8 @@ that it might not get the exact version of the dependencies due to not reading t
 
 In order for this watcher to be available in the UI, you'll need to have a Away From Computer (afk) watcher running alongside it.
 
-Every heartbeat now includes a `virtual_desktop` field indicating the current workspace index (or GUID on Windows). This information is best-effort and may not be available on all desktop environments.
+Every heartbeat now includes a `virtual_desktop` field indicating the current workspace index (or desktop name on Windows). This information is best-effort and may not be available on all desktop environments.
 
-### Note to macOS users
+Window titles can contain sensitive data. Use the `--exclude-title` option or set `exclude_title = true` in the configuration to omit the `title` field entirely from the sent events.
 
-To log current window title the terminal needs access to macOS accessibility API.
-This can be enabled in `System Preferences > Security & Privacy > Accessibility`, then add the Terminal to this list. If this is not enabled the watcher can only log current application, and not window title.
 

@@ -25,7 +25,6 @@ python-xlib = {version = "0.31", platform = "linux"}
 [poetry.group.dev.dependencies]
 pytest = "*"
 mypy = "*"
-macholib = {version = "*", platform = "darwin"}  # Needed for pyinstaller
 pyinstaller = {version = "*", python = "^3.8,<3.14"}
 
 [build-system]
