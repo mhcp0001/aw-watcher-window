@@ -21,25 +21,10 @@ def get_current_window_linux() -> Optional[dict]:
     return {"app": cls, "title": name, "virtual_desktop": get_virtual_desktop()}
 
 
+# macOS support has been disabled. The function is kept for compatibility but
+# always raises a FatalError to signal unsupported platform.
 def get_current_window_macos(strategy: str) -> Optional[dict]:
-    # TODO should we use unknown when the title is blank like the other platforms?
-
-    # `jxa` is the default & preferred strategy. It includes the url + incognito status
-    if strategy == "jxa":
-        from . import macos_jxa
-
-        info = macos_jxa.getInfo()
-        info["virtual_desktop"] = get_virtual_desktop()
-        return info
-    elif strategy == "applescript":
-        from . import macos_applescript
-
-        info = macos_applescript.getInfo()
-        info["virtual_desktop"] = get_virtual_desktop()
-        return info
-    else:
-        raise FatalError(f"invalid strategy '{strategy}'")
-
+    raise FatalError("macOS support has been disabled in this build")
 
 def get_current_window_windows() -> Optional[dict]:
     from . import windows
@@ -68,10 +53,10 @@ def get_current_window(strategy: Optional[str] = None) -> Optional[dict]:
 
     if sys.platform.startswith("linux"):
         return get_current_window_linux()
+
     elif sys.platform == "darwin":
-        if strategy is None:
-            raise FatalError("macOS strategy not specified")
-        return get_current_window_macos(strategy)
+        raise FatalError("macOS support disabled")
+
     elif sys.platform in ["win32", "cygwin"]:
         return get_current_window_windows()
     else:

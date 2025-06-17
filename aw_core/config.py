@@ -6,6 +6,5 @@ def load_config_toml(name: str, default=None) -> Dict[str, Dict]:
             "exclude_title": False,
             "exclude_titles": [],
             "poll_time": 1.0,
-            "strategy_macos": "swift",
         }
     }

@@ -2,8 +2,6 @@ import logging
 import json
 import os
 import re
-import signal
-import subprocess
 import sys
 from datetime import datetime, timezone
 from time import sleep
@@ -16,7 +14,6 @@ from .config import parse_args
 from .exceptions import FatalError
 from .lib import get_current_window
 from .platform import get_virtual_desktop
-from .macos_permissions import background_ensure_permissions
 
 logger = logging.getLogger(__name__)
 
@@ -24,16 +21,6 @@ logger = logging.getLogger(__name__)
 log_level = os.environ.get("LOG_LEVEL")
 if log_level:
     logger.setLevel(logging.__getattribute__(log_level.upper()))
-
-
-def kill_process(pid):
-    logger.info("Killing process {}".format(pid))
-    try:
-        os.kill(pid, signal.SIGTERM)
-    except ProcessLookupError:
-        logger.info("Process {} already dead".format(pid))
-
-
 def try_compile_title_regex(title):
     try:
         return re.compile(title, re.IGNORECASE)
@@ -51,9 +38,17 @@ def main():
         raise Exception("DISPLAY environment variable not set")
 
     if args.oneshot:
-        data = get_current_window(args.strategy)
+        data = get_current_window()
         if data is not None and "virtual_desktop" not in data:
             data["virtual_desktop"] = get_virtual_desktop()
+
+        for pattern in [try_compile_title_regex(t) for t in args.exclude_titles]:
+            if data and "title" in data and pattern.search(data["title"]):
+                data.pop("title", None)
+
+        if args.exclude_title and data is not None:
+            data.pop("title", None)
+
         print(json.dumps(data))
         return
 
@@ -64,9 +59,6 @@ def main():
         log_stderr=True,
         log_file=True,
     )
-
-    if sys.platform == "darwin":
-        background_ensure_permissions()
 
     client = ActivityWatchClient(
         "aw-watcher-virtualdesktop", host=args.host, port=args.port, testing=args.testing
@@ -81,45 +73,23 @@ def main():
     client.wait_for_start()
 
     with client:
-        if sys.platform == "darwin" and args.strategy == "swift":
-            logger.info("Using swift strategy, calling out to swift binary")
-            binpath = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)), "aw-watcher-virtualdesktop-macos"
-            )
+        heartbeat_loop(
+            client,
+            bucket_id,
+            poll_time=args.poll_time,
+            strategy=args.strategy,
 
-            try:
-                p = subprocess.Popen(
-                    [
-                        binpath,
-                        client.server_address,
-                        bucket_id,
-                        client.client_hostname,
-                        client.client_name,
-                    ]
-                )
-                # terminate swift process when this process dies
-                signal.signal(signal.SIGTERM, lambda *_: kill_process(p.pid))
-                p.wait()
-            except KeyboardInterrupt:
-                print("KeyboardInterrupt")
-                kill_process(p.pid)
-        else:
-            heartbeat_loop(
-                client,
-                bucket_id,
-                poll_time=args.poll_time,
-                strategy=args.strategy,
-                exclude_title=args.exclude_title,
-                exclude_titles=[
-                    try_compile_title_regex(title)
-                    for title in args.exclude_titles
-                    if title is not None
-                ],
-            )
+            exclude_title=args.exclude_title,
+            exclude_titles=[
+                try_compile_title_regex(title)
+                for title in args.exclude_titles
+                if title is not None
+            ],
+        )
 
 
 def heartbeat_loop(
-    client, bucket_id, poll_time, strategy, exclude_title=False, exclude_titles=[]
+    client, bucket_id, poll_time, exclude_title=False, exclude_titles=[]
 ):
     while True:
         if os.getppid() == 1:
@@ -128,7 +98,7 @@ def heartbeat_loop(
 
         current_window = None
         try:
-            current_window = get_current_window(strategy)
+            current_window = get_current_window()
             logger.debug(current_window)
         except (FatalError, OSError):
             # Fatal exceptions should quit the program
@@ -154,11 +124,12 @@ def heartbeat_loop(
             logger.debug("Unable to fetch window, trying again on next poll")
         else:
             for pattern in exclude_titles:
-                if pattern.search(current_window["title"]):
-                    current_window["title"] = "excluded"
+                if "title" in current_window and pattern.search(current_window["title"]):
+                    current_window.pop("title", None)
+                    break
 
-            if exclude_title:
-                current_window["title"] = "excluded"
+            if exclude_title and "title" in current_window:
+                current_window.pop("title", None)
 
             if "virtual_desktop" not in current_window:
                 current_window["virtual_desktop"] = get_virtual_desktop()
