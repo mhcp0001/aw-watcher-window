@@ -113,7 +113,9 @@ if sys.platform.startswith("win"):
         if guid is None:
             return None
         name = _lookup_desktop_name(guid)
-        return name or guid
+        if name is not None:
+            return name
+        return guid
 
 elif sys.platform == "darwin":
     def get_virtual_desktop() -> Optional[int]:
