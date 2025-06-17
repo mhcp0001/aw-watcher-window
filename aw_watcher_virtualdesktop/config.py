@@ -7,7 +7,6 @@ default_config = """
 exclude_title = false
 exclude_titles = []
 poll_time = 1.0
-strategy_macos = "swift"
 """.strip()
 
 
@@ -21,7 +20,6 @@ def parse_args():
     default_poll_time = config["poll_time"]
     default_exclude_title = config["exclude_title"]
     default_exclude_titles = config["exclude_titles"]
-    default_strategy_macos = config["strategy_macos"]
 
     parser = argparse.ArgumentParser(
         description="A cross platform window watcher for Activitywatch.\nSupported on: Linux (X11), macOS and Windows."
@@ -46,13 +44,6 @@ def parse_args():
     parser.add_argument("--oneshot", dest="oneshot", action="store_true")
     parser.add_argument(
         "--poll-time", dest="poll_time", type=float, default=default_poll_time
-    )
-    parser.add_argument(
-        "--strategy",
-        dest="strategy",
-        default=default_strategy_macos,
-        choices=["jxa", "applescript", "swift"],
-        help="(macOS only) strategy to use for retrieving the active window",
     )
     parsed_args = parser.parse_args()
     return parsed_args

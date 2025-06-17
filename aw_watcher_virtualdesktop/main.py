@@ -16,7 +16,6 @@ from .config import parse_args
 from .exceptions import FatalError
 from .lib import get_current_window
 from .platform import get_virtual_desktop
-from .macos_permissions import background_ensure_permissions
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +50,7 @@ def main():
         raise Exception("DISPLAY environment variable not set")
 
     if args.oneshot:
-        data = get_current_window(args.strategy)
+        data = get_current_window()
         if data is not None and "virtual_desktop" not in data:
             data["virtual_desktop"] = get_virtual_desktop()
         print(json.dumps(data))
@@ -65,8 +64,6 @@ def main():
         log_file=True,
     )
 
-    if sys.platform == "darwin":
-        background_ensure_permissions()
 
     client = ActivityWatchClient(
         "aw-watcher-virtualdesktop", host=args.host, port=args.port, testing=args.testing
@@ -81,45 +78,21 @@ def main():
     client.wait_for_start()
 
     with client:
-        if sys.platform == "darwin" and args.strategy == "swift":
-            logger.info("Using swift strategy, calling out to swift binary")
-            binpath = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)), "aw-watcher-virtualdesktop-macos"
-            )
-
-            try:
-                p = subprocess.Popen(
-                    [
-                        binpath,
-                        client.server_address,
-                        bucket_id,
-                        client.client_hostname,
-                        client.client_name,
-                    ]
-                )
-                # terminate swift process when this process dies
-                signal.signal(signal.SIGTERM, lambda *_: kill_process(p.pid))
-                p.wait()
-            except KeyboardInterrupt:
-                print("KeyboardInterrupt")
-                kill_process(p.pid)
-        else:
-            heartbeat_loop(
-                client,
-                bucket_id,
-                poll_time=args.poll_time,
-                strategy=args.strategy,
-                exclude_title=args.exclude_title,
-                exclude_titles=[
-                    try_compile_title_regex(title)
-                    for title in args.exclude_titles
-                    if title is not None
-                ],
-            )
+        heartbeat_loop(
+            client,
+            bucket_id,
+            poll_time=args.poll_time,
+            exclude_title=args.exclude_title,
+            exclude_titles=[
+                try_compile_title_regex(title)
+                for title in args.exclude_titles
+                if title is not None
+            ],
+        )
 
 
 def heartbeat_loop(
-    client, bucket_id, poll_time, strategy, exclude_title=False, exclude_titles=[]
+    client, bucket_id, poll_time, exclude_title=False, exclude_titles=[]
 ):
     while True:
         if os.getppid() == 1:
@@ -128,7 +101,7 @@ def heartbeat_loop(
 
         current_window = None
         try:
-            current_window = get_current_window(strategy)
+            current_window = get_current_window()
             logger.debug(current_window)
         except (FatalError, OSError):
             # Fatal exceptions should quit the program
