@@ -12,57 +12,91 @@ if sys.platform.startswith("win"):
         from ctypes import wintypes
         from comtypes import GUID, COMMETHOD, HRESULT
 
-        try:
-            class IVirtualDesktopManager(comtypes.IUnknown):
-                _iid_ = GUID("{A5CD92FF-29BE-454C-8D04-D82879FB3F1B}")
-                _methods_ = [
-                    COMMETHOD([], HRESULT, "IsWindowOnCurrentVirtualDesktop",
-                              (["in"], wintypes.HWND, "hwnd"),
-                              (["out"], ctypes.POINTER(ctypes.c_bool), "onCurrentDesktop")),
-                    COMMETHOD([], HRESULT, "GetWindowDesktopId",
-                              (["in"], wintypes.HWND, "hwnd"),
-                              (["out"], ctypes.POINTER(GUID), "desktopId")),
-                    COMMETHOD([], HRESULT, "MoveWindowToDesktop",
-                              (["in"], wintypes.HWND, "hwnd"),
-                              (["in"], ctypes.POINTER(GUID), "desktopId")),
-                ]
+        class IVirtualDesktopManager(comtypes.IUnknown):
+            _iid_ = GUID("{A5CD92FF-29BE-454C-8D04-D82879FB3F1B}")
+            _methods_ = [
+                COMMETHOD([], HRESULT, "IsWindowOnCurrentVirtualDesktop",
+                          (["in"], wintypes.HWND, "hwnd"),
+                          (["out"], ctypes.POINTER(ctypes.c_bool), "onCurrentDesktop")),
+                COMMETHOD([], HRESULT, "GetWindowDesktopId",
+                          (["in"], wintypes.HWND, "hwnd"),
+                          (["out"], ctypes.POINTER(comtypes.GUID), "desktopId")),
+                COMMETHOD([], HRESULT, "MoveWindowToDesktop",
+                          (["in"], wintypes.HWND, "hwnd"),
+                          (["in"], ctypes.POINTER(comtypes.GUID), "desktopId")),
+            ]
 
-            CLSID_VirtualDesktopManager = GUID("{AA509086-5CA9-4C25-8F95-589D3C07B48A}")
-        except Exception:
-            # comtypes might be a stub without ctypes integration (as in tests)
-            class IVirtualDesktopManager:  # type: ignore
-                pass
-
-            CLSID_VirtualDesktopManager = GUID("{AA509086-5CA9-4C25-8F95-589D3C07B48A}")
+        CLSID_VirtualDesktopManager = GUID("{AA509086-5CA9-4C25-8F95-589D3C07B48A}")
     except Exception:  # pragma: no cover - used on non-windows platforms
         comtypes = None  # type: ignore
         IVirtualDesktopManager = object  # type: ignore
         CLSID_VirtualDesktopManager = None
 
     def _get_virtual_desktop_guid() -> Optional[str]:
-        """Return the GUID of the current virtual desktop on Windows."""
+        """Return the GUID of the current virtual desktop on Windows. 必ず取得できなければ詳細なエラーを出す"""
         from .windows import get_active_window_handle
 
         if comtypes is None:
+            print("comtypes is None (not installed or import error)")
             return None
 
+        # COM初期化（STA明示、既に初期化済みなら無視）
+        # COM初期化は呼び出し側に任せる（ここでは呼ばない）
+        # try:
+        #     if hasattr(comtypes, 'CoInitializeEx'):
+        #         try:
+        #             comtypes.CoInitializeEx(0)  # 0 = COINIT_APARTMENTTHREADED
+        #         except Exception as e:
+        #             if getattr(e, 'hresult', None) != -2147417850:
+        #                 print(f"COM initialization failed: {e}")
+        #                 return None
+        #     else:
+        #         try:
+        #             comtypes.CoInitialize()
+        #         except Exception as e:
+        #             if getattr(e, 'hresult', None) != -2147417850:
+        #                 print(f"COM initialization failed: {e}")
+        #                 return None
+        # except Exception as e:
+        #     print(f"COM initialization unexpected error: {e}")
+        #     return None
+
+        # インターフェース生成
         try:
-            comtypes.CoInitialize()
             manager = comtypes.CoCreateInstance(
                 CLSID_VirtualDesktopManager, interface=IVirtualDesktopManager
             )
-        except Exception:
+            print(f"manager: {manager}, type: {type(manager)}")
+        except Exception as e:
+            print(f"CoCreateInstance failed: {e}")
+            return None
+
+        hwnd = get_active_window_handle()
+        print(f"get_active_window_handle() returned: {hwnd}, type: {type(hwnd)}")
+        if not hwnd or hwnd == 0:
+            print(f"get_active_window_handle() failed: hwnd={hwnd}")
+            return None
+        try:
+            hwnd_c = ctypes.wintypes.HWND(hwnd)
+            print(f"hwnd_c: {hwnd_c}, type: {type(hwnd_c)}")
+        except Exception as e:
+            print(f"HWND cast failed: {e}")
             return None
 
         desktop_id = comtypes.GUID()
-        hwnd = get_active_window_handle()
+        print(f"desktop_id (before): {desktop_id}, type: {type(desktop_id)}")
         try:
-            res = manager.GetWindowDesktopId(hwnd, ctypes.byref(desktop_id))
-        except Exception:
+            guid_out = manager.GetWindowDesktopId(hwnd_c)
+            print(f"GetWindowDesktopId returned: {guid_out}, type: {type(guid_out)}")
+            guid_str = str(guid_out)
+        except Exception as e:
+            print(f"GetWindowDesktopId error: {e}")
+            import traceback; traceback.print_exc()
             return None
-        if res != 0:
+        if not guid_str or guid_str == "00000000-0000-0000-0000-000000000000":
+            print(f"GetWindowDesktopId returned empty or default GUID: {guid_str}")
             return None
-        return str(desktop_id)
+        return guid_str
 
     def _lookup_desktop_name(desktop_guid: str) -> Optional[str]:
         """Look up the configured name for a virtual desktop GUID."""
