@@ -42,15 +42,15 @@ jobs:
       shell: bash
       run: |
         if [[ "${{ runner.os }}" == "Windows" ]]; then
-          dist/aw-watcher-window/aw-watcher-window.exe --help
+          dist/aw-watcher-virtualdesktop/aw-watcher-virtualdesktop.exe --help
         else
-          dist/aw-watcher-window/aw-watcher-window --help
+          dist/aw-watcher-virtualdesktop/aw-watcher-virtualdesktop --help
         fi
     - name: Upload package
       uses: actions/upload-artifact@v4
       with:
-        name: aw-watcher-window-${{ runner.os }}-py${{ matrix.python_version }}
-        path: dist/aw-watcher-window
+        name: aw-watcher-virtualdesktop-${{ runner.os }}-py${{ matrix.python_version }}
+        path: dist/aw-watcher-virtualdesktop
 
   typecheck:
     runs-on: ubuntu-latest
@@ -95,7 +95,7 @@ jobs:
     - name: Run tests
       run: poetry run make test
     - name: Build executable with PyInstaller
-      run: poetry run pyinstaller aw-watcher-window.spec
+      run: poetry run pyinstaller aw-watcher-virtualdesktop.spec
     - name: Upload Windows Executable
       uses: actions/upload-artifact@v4
       with:
