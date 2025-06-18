@@ -39,8 +39,13 @@ jobs:
     - name: Package
       run: poetry run make package
     - name: Test package
+      shell: bash
       run: |
-        dist/aw-watcher-window/aw-watcher-window --help
+        if [[ "${{ runner.os }}" == "Windows" ]]; then
+          dist/aw-watcher-window/aw-watcher-window.exe --help
+        else
+          dist/aw-watcher-window/aw-watcher-window --help
+        fi
     - name: Upload package
       uses: actions/upload-artifact@v4
       with:
@@ -94,5 +99,5 @@ jobs:
     - name: Upload Windows Executable
       uses: actions/upload-artifact@v4
       with:
-        name: aw-watcher-window-exe
-        path: dist/aw-watcher-window/aw-watcher-window.exe
+        name: aw-watcher-virtualdesktop-exe
+        path: dist/aw-watcher-virtualdesktop/aw-watcher-virtualdesktop.exe
