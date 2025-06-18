@@ -29,7 +29,9 @@ jobs:
       run: |
         poetry config virtualenvs.create true
         poetry lock
-        poetry install --no-interaction --no-ansi
+        poetry install --no-interaction --no-ansi --with dev
+    - name: Install PyInstaller
+      run: poetry run pip install pyinstaller
     - name: Build
       run: poetry run make build
     - name: Run tests
@@ -61,7 +63,7 @@ jobs:
       run: |
         poetry config virtualenvs.create true
         poetry lock
-        poetry install --no-interaction --no-ansi
+        poetry install --no-interaction --no-ansi --with dev
     - name: Typecheck
       run: poetry run make typecheck
 
@@ -82,7 +84,7 @@ jobs:
       run: |
         poetry config virtualenvs.create true
         poetry lock
-        poetry install --no-interaction --no-ansi
+        poetry install --no-interaction --no-ansi --with dev
     - name: Install PyInstaller
       run: poetry run pip install pyinstaller
     - name: Run tests

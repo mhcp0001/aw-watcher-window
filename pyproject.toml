@@ -22,7 +22,7 @@ comtypes = {version = "*", platform = "win32"}
 # also locked in aw-watcher-afk
 python-xlib = {version = "0.31", platform = "linux"}
 
-[poetry.group.dev.dependencies]
+[tool.poetry.dev-dependencies]
 pytest = "*"
 mypy = "*"
 pyinstaller = {version = "*", python = "^3.8,<3.14"}
