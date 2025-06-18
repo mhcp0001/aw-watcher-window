@@ -45,6 +45,26 @@ jobs:
         name: aw-watcher-window-${{ runner.os }}-py${{ matrix.python_version }}
         path: dist/aw-watcher-window
 
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: 'recursive'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.9
+    - name: Install Poetry
+      run: pip install poetry==1.3.2
+    - name: Install dependencies
+      run: |
+        poetry config virtualenvs.create true
+        poetry lock
+        poetry install --no-interaction --no-ansi
+    - name: Typecheck
+      run: poetry run make typecheck
+
   build-windows-exe:
     name: Build Windows Executable
     runs-on: windows-latest
@@ -74,23 +94,3 @@ jobs:
       with:
         name: aw-watcher-window-exe
         path: dist/aw-watcher-window/aw-watcher-window.exe
-
-  typecheck:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: 'recursive'
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.9
-    - name: Install Poetry
-      run: pip install poetry==1.3.2
-    - name: Install dependencies
-      run: |
-        poetry config virtualenvs.create true
-        poetry lock
-        poetry install --no-interaction --no-ansi
-    - name: Typecheck
-      run: poetry run make typecheck
