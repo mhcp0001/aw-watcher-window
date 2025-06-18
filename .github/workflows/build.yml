@@ -40,7 +40,7 @@ jobs:
       run: |
         dist/aw-watcher-window/aw-watcher-window --help
     - name: Upload package
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: aw-watcher-window-${{ runner.os }}-py${{ matrix.python_version }}
         path: dist/aw-watcher-window
@@ -70,7 +70,7 @@ jobs:
     - name: Build executable with PyInstaller
       run: poetry run pyinstaller aw-watcher-window.spec
     - name: Upload Windows Executable
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: aw-watcher-window-exe
         path: dist/aw-watcher-window/aw-watcher-window.exe
